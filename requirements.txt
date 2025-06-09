@@ -1,0 +1,9 @@
+tk
+sentence-transformers
+faiss-cpu
+PyMuPDF
+numpy
+pdfplumber
+pytesseract
+pdf2image
+llama-cpp-python
