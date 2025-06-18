@@ -7,7 +7,6 @@ from ttkbootstrap import Style
 from ttkbootstrap.constants import *
 from ttkbootstrap.widgets import Entry, Button, Frame, Label
 
-
 from chatbot.chatbot import PDFChatbot
 from table.crud_table import CrudTable
 from database.db import insert_pdf_data, insert_flight, init_db
@@ -79,11 +78,13 @@ class ChatbotPage(Frame):
         if not question.strip():
             return
         self.chat_area.insert(tk.END, f"You: {question}\n")
+        self.chat_area.insert(tk.END, "Bot is typing...\n")
         self.chat_area.see(tk.END)
         self.user_input.delete(0, tk.END)
 
         def get_response():
             response = self.chatbot.ask(question)
+            self.chat_area.delete("end-2l", "end-1l")  # Remove "Bot is typing..."
             self.typing_animation(f"Bot: {response}\n\n")
 
         threading.Thread(target=get_response).start()
