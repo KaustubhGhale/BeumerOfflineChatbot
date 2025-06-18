@@ -7,3 +7,4 @@ pdfplumber
 pytesseract
 pdf2image
 llama-cpp-python
+ttkbootstrap

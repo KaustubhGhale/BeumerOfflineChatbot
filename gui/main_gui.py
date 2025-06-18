@@ -1,28 +1,43 @@
-import tkinter as tk
-from tkinter import filedialog, scrolledtext, messagebox
 import os
+import threading
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from tkinter.scrolledtext import ScrolledText
+from ttkbootstrap import Style
+from ttkbootstrap.constants import *
+from ttkbootstrap.widgets import Entry, Button, Frame, Label
+
+
 from chatbot.chatbot import PDFChatbot
 from table.crud_table import CrudTable
-from database.db import insert_pdf_data, insert_flight
+from database.db import insert_pdf_data, insert_flight, init_db
 from utils.pdf_parser import extract_text_from_pdf
-import re
 
-class ChatbotPage(tk.Frame):
+
+class ChatbotPage(Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent)
+        super().__init__(parent, padding=10)
         self.controller = controller
         self.chatbot = PDFChatbot()
 
-        tk.Button(self, text="Upload PDF", command=self.upload_pdf).pack(pady=10)
+        Label(self, text="Offline Chatbot", font=("Helvetica", 16, "bold")).pack(pady=10)
 
-        self.chat_area = scrolledtext.ScrolledText(self, wrap=tk.WORD, height=20, width=80)
-        self.chat_area.pack(padx=10, pady=10)
+        Button(self, text="Upload PDF", bootstyle=PRIMARY, command=self.upload_pdf).pack(pady=5)
 
-        self.user_input = tk.Entry(self, width=80)
-        self.user_input.pack(pady=5)
+        self.chat_area = ScrolledText(self, wrap=tk.WORD, height=20, width=100)
+        self.chat_area.pack(pady=10)
 
-        tk.Button(self, text="Ask", command=self.ask_question).pack(pady=5)
-        tk.Button(self, text="Go to Table View", command=lambda: controller.show_frame("TablePage")).pack(pady=10)
+        entry_frame = Frame(self)
+        entry_frame.pack(fill=X, pady=5)
+
+        self.user_input = Entry(entry_frame, width=80)
+        self.user_input.pack(side=LEFT, padx=(0, 10), fill=X, expand=True)
+        self.user_input.bind("<Return>", lambda event: self.ask_question())
+
+        Button(entry_frame, text="Ask", bootstyle=SUCCESS, command=self.ask_question).pack(side=LEFT)
+
+        Button(self, text="Clear Chat", bootstyle=SECONDARY, command=self.clear_chat).pack(pady=5)
+        Button(self, text="Go to Table View", bootstyle=INFO, command=lambda: controller.show_frame("TablePage")).pack(pady=10)
 
     def upload_pdf(self):
         file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
@@ -33,10 +48,8 @@ class ChatbotPage(tk.Frame):
                 messagebox.showerror("Error", "Failed to extract any content from PDF.")
                 return
 
-            # Save the raw text in the database
             insert_pdf_data(os.path.basename(file_path), text)
 
-            # Attempt to find and insert flight table data
             inserted = False
             for table in tables:
                 if table and isinstance(table, list):
@@ -59,32 +72,53 @@ class ChatbotPage(tk.Frame):
                     except ValueError:
                         continue
 
-            messagebox.showinfo("Success", f"PDF uploaded successfully.\n")
+            messagebox.showinfo("Success", "PDF uploaded and processed successfully.")
 
     def ask_question(self):
         question = self.user_input.get()
-        if question:
-            response = self.chatbot.ask(question)
-            self.chat_area.insert(tk.END, f"You: {question}\nBot: {response}\n\n")
-            self.user_input.delete(0, tk.END)
+        if not question.strip():
+            return
+        self.chat_area.insert(tk.END, f"You: {question}\n")
+        self.chat_area.see(tk.END)
+        self.user_input.delete(0, tk.END)
 
-class TablePage(tk.Frame):
+        def get_response():
+            response = self.chatbot.ask(question)
+            self.typing_animation(f"Bot: {response}\n\n")
+
+        threading.Thread(target=get_response).start()
+
+    def typing_animation(self, text):
+        for char in text:
+            self.chat_area.insert(tk.END, char)
+            self.chat_area.see(tk.END)
+            self.chat_area.update()
+            self.chat_area.after(10)
+
+    def clear_chat(self):
+        self.chat_area.delete(1.0, tk.END)
+
+
+class TablePage(Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent)
+        super().__init__(parent, padding=10)
         self.controller = controller
 
+        Label(self, text="Flight Table View", font=("Helvetica", 16, "bold")).pack(pady=10)
         self.table = CrudTable(self)
-        self.table.pack()
+        self.table.pack(pady=10)
 
-        tk.Button(self, text="Go to Chatbot View", command=lambda: controller.show_frame("ChatbotPage")).pack(pady=10)
+        Button(self, text="Go to Chatbot View", bootstyle=INFO, command=lambda: controller.show_frame("ChatbotPage")).pack(pady=10)
+
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Offline Chatbot with Table")
-        self.geometry("900x700")
+        self.title("Offline AI Chatbot System")
+        self.geometry("1000x750")
+        self.style = Style("flatly")
 
-        container = tk.Frame(self)
+        container = Frame(self)
         container.pack(fill="both", expand=True)
 
         self.frames = {}
@@ -100,8 +134,8 @@ class App(tk.Tk):
         frame = self.frames[page_name]
         frame.tkraise()
 
+
 if __name__ == '__main__':
-    from database.db import init_db
     init_db()
     app = App()
     app.mainloop()
