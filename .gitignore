@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python/
+env/
+venv/
+*.env
+.idea/
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# LLM Models and Data
+models/
+data/
+*.gguf
+*.bin
+*.safetensors
+*.pth
+
+# PDF Embeddings (FAISS index)
+.ipynb_checkpoints/
+.faiss_cache/
+faiss_index/
