@@ -167,7 +167,7 @@ This project is open-source and available under the **MIT License**. This means 
 
 ---
 
-## 📧 Let's Connect!
+## Let's Connect!
 
 Got questions? Need a hand with something? Or just want to chat about the project? Don't hesitate to reach out!
 
