@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://placehold.co/150x50/004080/ffffff?text=BEUMER+LOGO" alt="Beumer Group Logo Placeholder" style="background-color: #004080; padding: 10px; border-radius: 5px;">
   <h1>Beumer Offline Chatbot Application</h1>
   <p>
     <em>An intelligent, offline chatbot for managing airport operations data,
